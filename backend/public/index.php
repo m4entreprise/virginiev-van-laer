@@ -94,7 +94,7 @@ function handleContact(): void
 
 function verifyRecaptcha(string $token, ?string &$error = null): bool
 {
-    $secret = getenv('RECAPTCHA_SECRET') ?: ($_ENV['RECAPTCHA_SECRET'] ?? null);
+    $secret = getEnvValue('RECAPTCHA_SECRET');
 
     if ($secret === null || $secret === '') {
         $error = 'missing_secret';
@@ -147,6 +147,71 @@ function verifyRecaptcha(string $token, ?string &$error = null): bool
     }
 
     return true;
+}
+
+function getEnvValue(string $key): ?string
+{
+    $value = getenv($key);
+    if ($value !== false && $value !== '') {
+        return $value;
+    }
+
+    if (isset($_ENV[$key]) && $_ENV[$key] !== '') {
+        return $_ENV[$key];
+    }
+
+    if (isset($_SERVER[$key]) && $_SERVER[$key] !== '') {
+        return $_SERVER[$key];
+    }
+
+    static $dotEnv = null;
+
+    if ($dotEnv === null) {
+        $dotEnv = [];
+        $root = dirname(dirname(__DIR__));
+        $envPath = $root . DIRECTORY_SEPARATOR . '.env';
+
+        if (is_file($envPath) && is_readable($envPath)) {
+            $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+            if ($lines !== false) {
+                foreach ($lines as $line) {
+                    $trimmed = ltrim($line);
+
+                    if ($trimmed === '' || $trimmed[0] === '#') {
+                        continue;
+                    }
+
+                    $pos = strpos($line, '=');
+
+                    if ($pos === false) {
+                        continue;
+                    }
+
+                    $name = trim(substr($line, 0, $pos));
+                    $val = trim(substr($line, $pos + 1));
+
+                    if ($val !== '' && ($val[0] === '"' || $val[0] === "'")) {
+                        $len = strlen($val);
+
+                        if ($len >= 2 && $val[$len - 1] === $val[0]) {
+                            $val = substr($val, 1, $len - 2);
+                        }
+                    }
+
+                    $dotEnv[$name] = $val;
+                }
+            }
+        }
+    }
+
+    $value = $dotEnv[$key] ?? null;
+
+    if ($value === '') {
+        return null;
+    }
+
+    return $value;
 }
 
 function sendContactEmail(string $name, string $email, string $message): bool
