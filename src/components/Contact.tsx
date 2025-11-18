@@ -7,6 +7,21 @@ import { Textarea } from "@/components/ui/textarea";
 
 const RECAPTCHA_SITE_KEY = "6LfFJhAsAAAAAEYBCJNj1aJN9ctaaYhzd-8lxP6w";
 
+type RecaptchaExecute = (siteKey: string, options: { action: string }) => Promise<string>;
+
+type RecaptchaClient = {
+  enterprise?: {
+    execute: RecaptchaExecute;
+  };
+  execute?: RecaptchaExecute;
+};
+
+declare global {
+  interface Window {
+    grecaptcha?: RecaptchaClient;
+  }
+}
+
 const Contact = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -20,9 +35,8 @@ const Contact = () => {
     setFormMessage(null);
 
     try {
-      const anyWindow = window as any;
-      const enterprise = anyWindow.grecaptcha?.enterprise;
-      const grecaptcha = enterprise ?? anyWindow.grecaptcha;
+      const enterprise = window.grecaptcha?.enterprise;
+      const grecaptcha = enterprise ?? window.grecaptcha;
 
       if (!grecaptcha) {
         setFormMessage("Le captcha n'est pas disponible, veuillez réessayer plus tard.");
