@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 35 25% 96%;
+    --foreground: 160 25% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 160 25% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 25% 20%;
+
+    --primary: 160 20% 45%;
+    --primary-foreground: 35 25% 96%;
+
+    --secondary: 35 35% 88%;
+    --secondary-foreground: 160 25% 20%;
+
+    --muted: 35 20% 92%;
+    --muted-foreground: 160 15% 45%;
+
+    --accent: 40 40% 75%;
+    --accent-foreground: 160 25% 20%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 35 20% 88%;
+    --input: 35 20% 88%;
+    --ring: 160 20% 45%;
+
+    --radius: 0.75rem;
+
+    /* Custom tokens for the design */
+    --sage: 160 20% 45%;
+    --sage-light: 160 15% 65%;
+    --sage-dark: 160 25% 30%;
+    --cream: 35 25% 96%;
+    --warm-beige: 35 35% 88%;
+    --gold-accent: 40 50% 65%;
+
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    --background: 160 25% 12%;
+    --foreground: 35 25% 96%;
+
+    --card: 160 20% 15%;
+    --card-foreground: 35 25% 96%;
+
+    --popover: 160 20% 15%;
+    --popover-foreground: 35 25% 96%;
+
+    --primary: 160 20% 55%;
+    --primary-foreground: 160 25% 12%;
+
+    --secondary: 160 15% 20%;
+    --secondary-foreground: 35 25% 96%;
+
+    --muted: 160 15% 22%;
+    --muted-foreground: 35 20% 70%;
+
+    --accent: 160 15% 25%;
+    --accent-foreground: 35 25% 96%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 160 15% 22%;
+    --input: 160 15% 22%;
+    --ring: 160 20% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-in-out;
+  }
+
+  .animate-fade-in-delayed {
+    animation: fadeIn 0.8s ease-in-out 0.2s both;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
