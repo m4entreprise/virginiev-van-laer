@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use PHPMailer\PHPMailer\Exception as PHPMailerException;
+use PHPMailer\PHPMailer\PHPMailer;
+
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 
 if ($uri === '/api/contact') {
@@ -80,6 +83,12 @@ function handleContact(): void
         return;
     }
 
+    if (!sendContactEmail($name, $email, $message)) {
+        http_response_code(500);
+        echo json_encode(['error' => 'mail_failed']);
+        return;
+    }
+
     echo json_encode(['success' => true]);
 }
 
@@ -133,4 +142,70 @@ function verifyRecaptcha(string $token, ?string &$error = null): bool
     }
 
     return true;
+}
+
+function sendContactEmail(string $name, string $email, string $message): bool
+{
+    // Build email body
+    $bodyLines = [
+        'Nom: ' . $name,
+        'Email: ' . $email,
+        '',
+        'Message:',
+        $message,
+        '',
+        '---',
+        'Adresse IP: ' . ($_SERVER['REMOTE_ADDR'] ?? 'inconnue'),
+        'Date: ' . date('Y-m-d H:i:s'),
+    ];
+
+    $body = implode("\n", $bodyLines);
+
+    // SMTP configuration via environment variables
+    $host = getenv('MAIL_HOST') ?: ($_ENV['MAIL_HOST'] ?? 'mail.m4entreprise.be');
+    $port = (int) (getenv('MAIL_PORT') ?: ($_ENV['MAIL_PORT'] ?? 465));
+    $username = getenv('MAIL_USERNAME') ?: ($_ENV['MAIL_USERNAME'] ?? '');
+    $password = getenv('MAIL_PASSWORD') ?: ($_ENV['MAIL_PASSWORD'] ?? '');
+    $fromAddress = getenv('MAIL_FROM_ADDRESS') ?: ($_ENV['MAIL_FROM_ADDRESS'] ?? $username ?: 'no-reply@virginie-van-laer.on-forge.com');
+    $fromName = getenv('MAIL_FROM_NAME') ?: ($_ENV['MAIL_FROM_NAME'] ?? 'Site web Virginie Van Laer');
+    $encryption = strtolower((string) (getenv('MAIL_ENCRYPTION') ?: ($_ENV['MAIL_ENCRYPTION'] ?? 'ssl')));
+
+    try {
+        // Load Composer autoloader if available
+        $autoload = __DIR__ . '/../vendor/autoload.php';
+        if (is_file($autoload)) {
+            require_once $autoload;
+        }
+
+        $mailer = new PHPMailer(true);
+        $mailer->isSMTP();
+        $mailer->Host = $host;
+        $mailer->Port = $port;
+        $mailer->SMTPAuth = true;
+        $mailer->Username = $username;
+        $mailer->Password = $password;
+
+        if ($encryption === 'ssl') {
+            $mailer->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        } elseif ($encryption === 'tls') {
+            $mailer->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        }
+
+        $mailer->CharSet = 'UTF-8';
+
+        $mailer->setFrom($fromAddress, $fromName);
+        if ($email !== '') {
+            $mailer->addReplyTo($email, $name !== '' ? $name : $email);
+        }
+        $mailer->addAddress('v.vanlaer@hotmail.com');
+
+        $mailer->Subject = 'Nouveau message depuis le site web';
+        $mailer->Body = $body;
+
+        $mailer->send();
+        return true;
+    } catch (PHPMailerException $exception) {
+        error_log('Contact form mail error: ' . $exception->getMessage());
+        return false;
+    }
 }

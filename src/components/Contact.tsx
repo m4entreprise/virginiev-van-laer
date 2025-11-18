@@ -1,8 +1,72 @@
+import { useState, type FormEvent } from "react";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+
+const RECAPTCHA_SITE_KEY = "6LcL9g8sAAAAACs0DoosZu3tofDbJGs0XAYaY7u2";
 
 const Contact = () => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setFormMessage(null);
+
+    try {
+      const anyWindow = window as any;
+      const enterprise = anyWindow.grecaptcha?.enterprise;
+      const grecaptcha = enterprise ?? anyWindow.grecaptcha;
+
+      if (!grecaptcha) {
+        setFormMessage("Le captcha n'est pas disponible, veuillez réessayer plus tard.");
+        return;
+      }
+
+      const token = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "submit" });
+
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          message,
+          recaptchaToken: token,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (response.status === 422) {
+        setFormMessage("Merci de vérifier les champs puis de réessayer.");
+        return;
+      }
+
+      if (!response.ok || (data && typeof data === "object" && "error" in data)) {
+        setFormMessage("Une erreur est survenue lors de l'envoi. Merci de réessayer.");
+        return;
+      }
+
+      setName("");
+      setEmail("");
+      setMessage("");
+      setFormMessage("Votre message a été envoyé avec succès.");
+    } catch {
+      setFormMessage("Une erreur est survenue lors de l'envoi. Merci de réessayer.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <section id="contact" className="py-20 px-4 bg-card">
       <div className="container mx-auto max-w-6xl">
@@ -82,6 +146,49 @@ const Contact = () => {
                   <p className="text-sm text-muted-foreground mt-2">Du lundi au vendredi</p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-12 max-w-2xl mx-auto">
+          <Card className="hover:shadow-lg transition-shadow bg-background border-border">
+            <CardContent className="p-8">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input
+                    type="text"
+                    placeholder="Votre nom"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    required
+                  />
+                  <Input
+                    type="email"
+                    placeholder="Votre email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    required
+                  />
+                </div>
+                <Textarea
+                  placeholder="Votre message"
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                  required
+                  rows={4}
+                />
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-8"
+                  disabled={submitting}
+                >
+                  {submitting ? "Envoi en cours..." : "Envoyer un message"}
+                </Button>
+                {formMessage && (
+                  <p className="text-sm text-muted-foreground mt-2">{formMessage}</p>
+                )}
+              </form>
             </CardContent>
           </Card>
         </div>

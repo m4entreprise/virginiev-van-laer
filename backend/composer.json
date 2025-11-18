@@ -1,0 +1,7 @@
+{
+  "name": "vvl/contact-backend",
+  "description": "Minimal contact form backend for Virginie Van Laer",
+  "require": {
+    "phpmailer/phpmailer": "^6.9"
+  }
+}
