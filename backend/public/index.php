@@ -133,6 +133,11 @@ function verifyRecaptcha(string $token, ?string &$error = null): bool
 
     if (empty($decoded['success'])) {
         $error = 'recaptcha_failed';
+
+        if (!empty($decoded['error-codes']) && is_array($decoded['error-codes'])) {
+            $error .= ':' . implode(',', $decoded['error-codes']);
+        }
+
         return false;
     }
 
