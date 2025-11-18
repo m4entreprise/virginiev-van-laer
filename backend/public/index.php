@@ -170,6 +170,7 @@ function getEnvValue(string $key): ?string
         $dotEnv = [];
 
         $rootCandidates = [
+            dirname(__DIR__),
             dirname(dirname(__DIR__)),
             dirname(dirname(dirname(__DIR__))),
         ];
