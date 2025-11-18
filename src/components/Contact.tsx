@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-const RECAPTCHA_SITE_KEY = "6LcL9g8sAAAAACs0DoosZu3tofDbJGs0XAYaY7u2";
+const RECAPTCHA_SITE_KEY = "6LfFJhAsAAAAAEYBCJNj1aJN9ctaaYhzd-8lxP6w";
 
 const Contact = () => {
   const [name, setName] = useState("");
