@@ -168,39 +168,54 @@ function getEnvValue(string $key): ?string
 
     if ($dotEnv === null) {
         $dotEnv = [];
-        $root = dirname(dirname(__DIR__));
-        $envPath = $root . DIRECTORY_SEPARATOR . '.env';
 
-        if (is_file($envPath) && is_readable($envPath)) {
+        $rootCandidates = [
+            dirname(dirname(__DIR__)),
+            dirname(dirname(dirname(__DIR__))),
+        ];
+
+        foreach ($rootCandidates as $root) {
+            $envPath = $root . DIRECTORY_SEPARATOR . '.env';
+
+            if (!is_file($envPath) || !is_readable($envPath)) {
+                continue;
+            }
+
             $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
-            if ($lines !== false) {
-                foreach ($lines as $line) {
-                    $trimmed = ltrim($line);
+            if ($lines === false) {
+                continue;
+            }
 
-                    if ($trimmed === '' || $trimmed[0] === '#') {
-                        continue;
-                    }
+            foreach ($lines as $line) {
+                $trimmed = ltrim($line);
 
-                    $pos = strpos($line, '=');
-
-                    if ($pos === false) {
-                        continue;
-                    }
-
-                    $name = trim(substr($line, 0, $pos));
-                    $val = trim(substr($line, $pos + 1));
-
-                    if ($val !== '' && ($val[0] === '"' || $val[0] === "'")) {
-                        $len = strlen($val);
-
-                        if ($len >= 2 && $val[$len - 1] === $val[0]) {
-                            $val = substr($val, 1, $len - 2);
-                        }
-                    }
-
-                    $dotEnv[$name] = $val;
+                if ($trimmed === '' || $trimmed[0] === '#') {
+                    continue;
                 }
+
+                $pos = strpos($line, '=');
+
+                if ($pos === false) {
+                    continue;
+                }
+
+                $name = trim(substr($line, 0, $pos));
+                $val = trim(substr($line, $pos + 1));
+
+                if ($val !== '' && ($val[0] === '"' || $val[0] === "'")) {
+                    $len = strlen($val);
+
+                    if ($len >= 2 && $val[$len - 1] === $val[0]) {
+                        $val = substr($val, 1, $len - 2);
+                    }
+                }
+
+                $dotEnv[$name] = $val;
+            }
+
+            if (!empty($dotEnv)) {
+                break;
             }
         }
     }
