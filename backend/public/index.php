@@ -197,7 +197,9 @@ function sendContactEmail(string $name, string $email, string $message): bool
         if ($email !== '') {
             $mailer->addReplyTo($email, $name !== '' ? $name : $email);
         }
-        $mailer->addAddress('v.vanlaer@hotmail.com');
+
+        $toAddress = getenv('MAIL_TO_ADDRESS') ?: ($_ENV['MAIL_TO_ADDRESS'] ?? 'v.vanlaer@hotmail.com');
+        $mailer->addAddress($toAddress);
 
         $mailer->Subject = 'Nouveau message depuis le site web';
         $mailer->Body = $body;
